@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LinkedIn Campaign Feedback Dashboard</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <style>
+    :root {
+      /* Background and surface */
+      --bg:         #FFFFFF;
+      --surface:    #FFFFFF;
+      /* Text */
+      --text:       #000000;
+      /* Primary accent (header, bars) */
+      --primary:    #E940A5;
+      /* Secondary accent pour les barres/segments verts */
+      --secondary:  #20CF85;
+      /* Chart data labels */
+      --accent:     #8540E9;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 1rem;
+    }
+    header {
+      position: relative;           /* Pour placer le logo absolu */
+      background: #FFFFFF;
+      color: #000000;
+      text-align: center;
+      padding: 1rem 0;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    header img.logo {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 40px;                /* Ajustez selon la taille souhaitée */
+      width: auto;
+    }
+    header h1 { font-weight: 700; font-size: 1.75rem; }
+    header p  { opacity: 0.85; margin-top: 0.5rem; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px,1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .card {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      color: var(--text);
+      margin-bottom: .5rem;
+      font-weight: 500;
+    }
+    .table-container { overflow-x: auto; margin-bottom: .75rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td {
+      color: var(--text);
+      text-align: left;
+      padding: .5rem;
+      border-bottom: 1px solid #ddd;
+    }
+    ul {
+      list-style: inside disc;
+      font-size: .9rem;
+      margin-bottom: .75rem;
+      padding-left: .75rem;
+    }
+    ul li { color: var(--text); margin-bottom: .5rem; }
+    canvas { display: block; width: 100%; height: 250px; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo.png" alt="Logo" class="logo">
+    <div>
+      <h1>LinkedIn Campaign Feedback Dashboard</h1>
+      <p>Complete Insights Summary</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- Top 5 Countries -->
+    <div class="card">
+      <h3>Top 5 Countries (% of comments)</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Rank</th><th>Country</th><th>% of Total</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>United States</td><td>55.0%</td></tr>
+            <tr><td>2</td><td>United Kingdom</td><td>13.7%</td></tr>
+            <tr><td>3</td><td>Canada</td><td>5.3%</td></tr>
+            <tr><td>4</td><td>Germany</td><td>3.8%</td></tr>
+            <tr><td>5</td><td>Nigeria</td><td>3.1%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <canvas id="geoChart"></canvas>
+    </div>
+
+    <!-- Feedback Distribution -->
+    <div class="card">
+      <h3>Feedback Distribution</h3>
+      <ul>
+        <li>None – 60.7%</li>
+        <li>Interest – 19.3%</li>
+        <li>Criticism – 12.0%</li>
+        <li>Feature – 8.0%</li>
+      </ul>
+      <canvas id="feedbackChart"></canvas>
+    </div>
+
+    <!-- Industry Engagement -->
+    <div class="card">
+      <h3>Industry Engagement</h3>
+      <ul>
+        <li><strong>Computer Software</strong> – 32.6%</li>
+        <li><strong>Software Development</strong> – 8.1%</li>
+        <li><strong>Management Consulting</strong> – 5.9%</li>
+        <li><strong>Marketing & Advertising</strong> – 5.9%</li>
+        <li><strong>IT & Services</strong> – 5.2%</li>
+      </ul>
+      <canvas id="industryChart"></canvas>
+    </div>
+
+    <!-- Company Size Distribution -->
+    <div class="card">
+      <h3>Company Size Distribution</h3>
+      <ul>
+        <li>501–1000 – 18.5%</li>
+        <li>2–10 – 16.6%</li>
+        <li>51–200 – 16.6%</li>
+        <li>11–50 – 10.6%</li>
+        <li>1001–5000 – 10.6%</li>
+      </ul>
+      <canvas id="sizeChart"></canvas>
+    </div>
+
+    <!-- Roles / Seniority Breakdown -->
+    <div class="card">
+      <h3>Roles / Seniority Breakdown</h3>
+      <ul>
+        <li>Individual Contributor – 68.9%</li>
+        <li>C-level – 14.6%</li>
+        <li>Manager – 12.6%</li>
+        <li>VP/Director – 4.0%</li>
+      </ul>
+      <canvas id="rolesChart"></canvas>
+    </div>
+
+    <!-- Themes Detected -->
+    <div class="card">
+      <h3>Themes Detected</h3>
+      <ul>
+        <li><strong>Demo Usage</strong> – 16.6%</li>
+        <li><strong>Storylane Brand Perception</strong> – 14.6%</li>
+        <li><strong>Interactive Demos</strong> – 7.3%</li>
+        <li><strong>Sales Enablement</strong> – 6.0%</li>
+        <li><strong>Positive Sentiment</strong> – 11.3%</li>
+      </ul>
+      <canvas id="themesChart"></canvas>
+    </div>
+
+    <!-- Key Feature Requests -->
+    <div class="card">
+      <h3>Key Feature Requests</h3>
+      <ul>
+        <li>More interactive, shareable demo formats.</li>
+        <li>Deeper Storylane branding within the demo player.</li>
+        <li>Embed analytics for sales follow-up.</li>
+      </ul>
+    </div>
+
+    <!-- Main Criticisms -->
+    <div class="card">
+      <h3>Main Criticisms</h3>
+      <ul>
+        <li>Occasional latency when loading demos.</li>
+        <li>Lack of mobile-optimized demo experience.</li>
+        <li>Limited customization of demo branding.</li>
+      </ul>
+    </div>
+
+    <!-- User Recommendations -->
+    <div class="card">
+      <h3>User Recommendations</h3>
+      <ul>
+        <li>Optimize demo load times for all networks.</li>
+        <li>Ensure responsive design on mobile devices.</li>
+        <li>Allow custom themes and logos per demo.</li>
+      </ul>
+    </div>
+
+    <!-- User Expectations -->
+    <div class="card">
+      <h3>User Expectations</h3>
+      <ul>
+        <li>Seamless, low-latency demo playback.</li>
+        <li>Fully branded, white-label demo experiences.</li>
+        <li>In-depth analytics for sales teams.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const palette = {
+      primary:   '#E940A5',
+      secondary: '#20CF85',
+      accent:    '#8540E9'
+    };
+    const axisColor = '#000000';
+
+    function makeGradient(ctx, color) {
+      const grad = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+      grad.addColorStop(0, color + 'CC');
+      grad.addColorStop(0.7, color + '88');
+      grad.addColorStop(1, color + '33');
+      return grad;
+    }
+
+    const commonOptions = {
+      plugins: {
+        datalabels: {
+          color: palette.accent,
+          anchor: 'end',
+          align: 'top',
+          font: { weight: 'bold', size: 12 },
+          formatter: v => v + '%'
+        },
+        legend: {
+          display: false,
+          labels: { color: axisColor }
+        },
+        tooltip: {
+          backgroundColor: palette.primary,
+          titleColor: '#FFF',
+          bodyColor: '#FFF',
+          cornerRadius: 4,
+          padding: 8
+        }
+      },
+      animation: { duration: 800, easing: 'easeOutQuart' },
+      scales: {
+        x: { ticks: { color: axisColor }, grid: { display: false } },
+        y: {
+          beginAtZero: true,
+          ticks: { color: axisColor, callback: v => v + '%' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+      }
+    };
+
+    function createBar(id, labels, data, color) {
+      const ctx = document.getElementById(id).getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        plugins: [ChartDataLabels],
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: makeGradient(ctx, color),
+            borderColor: color,
+            borderWidth: 2,
+            borderRadius: 6
+          }]
+        },
+        options: commonOptions
+      });
+    }
+
+    function createHorizontalBar(id, labels, data, color) {
+      const opts = {
+        ...commonOptions,
+        indexAxis: 'y',
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { color: axisColor, callback: v => v + '%' },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+          },
+          y: {
+            ticks: { color: axisColor },
+            grid: { display: false }
+          }
+        }
+      };
+      const ctx = document.getElementById(id).getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        plugins: [ChartDataLabels],
+        data: {
+          labels,
+          datasets: [{
+            data,
+            backgroundColor: makeGradient(ctx, color),
+            borderColor: color,
+            borderWidth: 2,
+            borderRadius: 6
+          }]
+        },
+        options: opts
+      });
+    }
+
+    function createDoughnut(id, labels, data, colors) {
+      const ctx = document.getElementById(id).getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        plugins: [ChartDataLabels],
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: colors, hoverOffset: 8 }]
+        },
+        options: {
+          ...commonOptions,
+          cutout: '60%',
+          plugins: {
+            ...commonOptions.plugins,
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { color: axisColor }
+            }
+          }
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      createBar('geoChart',
+        ['US','UK','CA','DE','NG'],
+        [55.0,13.7,5.3,3.8,3.1],
+        palette.primary
+      );
+      createDoughnut('feedbackChart',
+        ['None','Interest','Criticism','Feature'],
+        [60.7,19.3,12.0,8.0],
+        [palette.primary, palette.secondary, palette.accent, '#CCCCCC']
+      );
+      createHorizontalBar('industryChart',
+        ['Computer Software','Software Development','Management Consulting','Marketing & Advertising','IT & Services'],
+        [32.6,8.1,5.9,5.9,5.2],
+        palette.primary
+      );
+      createBar('sizeChart',
+        ['501–1000','2–10','51–200','11–50','1001–5000'],
+        [18.5,16.6,16.6,10.6,10.6],
+        palette.secondary
+      );
+      createBar('rolesChart',
+        ['IC','C-level','Manager','VP/Director'],
+        [68.9,14.6,12.6,4.0],
+        palette.accent
+      );
+      createBar('themesChart',
+        ['Demo Usage','Storylane Brand','Interactive Demos','Sales Enablement','Positive Sentiment'],
+        [16.6,14.6,7.3,6.0,11.3],
+        palette.primary
+      );
+    });
+  </script>
+</body>
+</html>
